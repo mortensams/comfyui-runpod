@@ -91,6 +91,7 @@ RUN apt-get update && \
     python3.12-venv \
     python3.12-dev \
     build-essential \
+    libssl-dev \
     wget \
     gnupg \
     xz-utils \
