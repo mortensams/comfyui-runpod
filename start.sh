@@ -312,38 +312,46 @@ else
     # Just activate the existing venv
     source $VENV_DIR/bin/activate
 
-    # Update ComfyUI dependencies on each start (ensures frontend stays current)
-    echo "Updating ComfyUI dependencies..."
-    pip install -q -r "$COMFYUI_DIR/requirements.txt"
+    # Only update dependencies if requirements have changed or FORCE_UPDATE is set
+    REQUIREMENTS_HASH_FILE="$VENV_DIR/.requirements_hash"
+    CURRENT_HASH=$(md5sum "$COMFYUI_DIR/requirements.txt" 2>/dev/null | awk '{print $1}')
 
-    echo "Checking for custom node dependencies..."
+    if [ ! -f "$REQUIREMENTS_HASH_FILE" ] || [ "$(cat $REQUIREMENTS_HASH_FILE)" != "$CURRENT_HASH" ] || [ "$FORCE_UPDATE" = "1" ]; then
+        echo "Updating ComfyUI dependencies (requirements changed or forced)..."
+        pip install -q -r "$COMFYUI_DIR/requirements.txt"
+        echo "$CURRENT_HASH" > "$REQUIREMENTS_HASH_FILE"
 
-    # Install dependencies for all custom nodes
-    cd "$COMFYUI_DIR/custom_nodes"
-    for node_dir in */; do
-        if [ -d "$node_dir" ]; then
-            echo "Checking dependencies for $node_dir..."
-            cd "$COMFYUI_DIR/custom_nodes/$node_dir"
-            
-            # Check for requirements.txt
-            if [ -f "requirements.txt" ]; then
-                echo "Installing requirements.txt for $node_dir"
-                uv pip install --no-cache -r requirements.txt
+        echo "Checking for custom node dependencies..."
+        # Install dependencies for all custom nodes
+        cd "$COMFYUI_DIR/custom_nodes"
+        for node_dir in */; do
+            if [ -d "$node_dir" ]; then
+                echo "Checking dependencies for $node_dir..."
+                cd "$COMFYUI_DIR/custom_nodes/$node_dir"
+
+                # Check for requirements.txt
+                if [ -f "requirements.txt" ]; then
+                    echo "Installing requirements.txt for $node_dir"
+                    pip install --no-cache-dir -r requirements.txt
+                fi
+
+                # Check for install.py
+                if [ -f "install.py" ]; then
+                    echo "Running install.py for $node_dir"
+                    python install.py
+                fi
+
+                # Check for setup.py
+                if [ -f "setup.py" ]; then
+                    echo "Running setup.py for $node_dir"
+                    pip install --no-cache-dir -e .
+                fi
             fi
-            
-            # Check for install.py
-            if [ -f "install.py" ]; then
-                echo "Running install.py for $node_dir"
-                python install.py
-            fi
-            
-            # Check for setup.py
-            if [ -f "setup.py" ]; then
-                echo "Running setup.py for $node_dir"
-                uv pip install --no-cache -e .
-            fi
-        fi
-    done
+        done
+    else
+        echo "Dependencies up to date (skipping pip install for faster startup)"
+        echo "Set FORCE_UPDATE=1 env var to force dependency updates"
+    fi
 fi
 
 # Start ComfyUI with custom arguments if provided
