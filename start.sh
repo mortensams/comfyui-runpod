@@ -150,18 +150,12 @@ start_ai_toolkit_ui() {
     echo "ai-toolkit Gradio UI started"
 }
 
-# ---------------------------------------------------------------------------- #
-#                               Main Program                                     #
-# ---------------------------------------------------------------------------- #
-
-# Setup environment
-setup_ssh
-export_env_vars
-
-# Initialize FileBrowser Quantum if not already done
-if [ ! -f "$FILEBROWSER_CONFIG" ]; then
-    echo "Initializing FileBrowser Quantum..."
-    cat > "$FILEBROWSER_CONFIG" << 'EOF'
+# Start FileBrowser Quantum
+start_filebrowser() {
+    # Initialize FileBrowser Quantum if not already done
+    if [ ! -f "$FILEBROWSER_CONFIG" ]; then
+        echo "Initializing FileBrowser Quantum..."
+        cat > "$FILEBROWSER_CONFIG" << 'EOF'
 server:
   port: 8080
   baseURL: "/"
@@ -187,19 +181,38 @@ frontend:
   name: "RunPod File Browser"
   disableDefaultLinks: true
 EOF
-    echo "FileBrowser Quantum configuration created"
-else
-    echo "Using existing FileBrowser Quantum configuration..."
-fi
+        echo "FileBrowser Quantum configuration created"
+    else
+        echo "Using existing FileBrowser Quantum configuration..."
+    fi
 
-# Start FileBrowser Quantum
-echo "Starting FileBrowser Quantum on port 8080..."
-cd /workspace/runpod-slim
-nohup filebrowser -c "$FILEBROWSER_CONFIG" &> /filebrowser.log &
+    # Start FileBrowser Quantum
+    echo "Starting FileBrowser Quantum on port 8080..."
+    cd /workspace/runpod-slim
+    nohup filebrowser -c "$FILEBROWSER_CONFIG" &> /filebrowser.log &
+}
 
-start_jupyter
+# ---------------------------------------------------------------------------- #
+#                               Main Program                                     #
+# ---------------------------------------------------------------------------- #
+
+# Setup environment
+setup_ssh
+export_env_vars
+
+# Start services in order: VS Code, FileBrowser, Jupyter, ai-toolkit, ComfyUI
+echo "=========================================="
+echo "Starting Services"
+echo "=========================================="
 start_vscode
+start_filebrowser
+start_jupyter
 start_ai_toolkit_ui
+
+echo "=========================================="
+echo "All support services started!"
+echo "Now starting ComfyUI..."
+echo "=========================================="
 
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"
