@@ -7,7 +7,7 @@ Run the latest ComfyUI. First start installs dependencies (takes a few minutes),
 - `8188`: ComfyUI web UI
 - `8080`: FileBrowser Quantum (mks / mks123)
 - `8888`: JupyterLab (token via `JUPYTER_PASSWORD`, root at `/workspace`)
-- `8000`: VS Code Server (token: mks123, or access via `?tkn=mks123`)
+- `8000`: VS Code Server (no authentication required - secured by RunPod)
 - `22`: SSH (set `PUBLIC_KEY` or check logs for generated root password)
 
 ## Pre-installed custom nodes

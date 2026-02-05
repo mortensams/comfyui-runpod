@@ -133,13 +133,13 @@ VSCODE_EOF
 
     echo "Starting VS Code server on port 8000..."
     nohup code serve-web \
-        --connection-token "mks123" \
+        --without-connection-token \
         --accept-server-license-terms \
         --host "0.0.0.0" \
         --port 8000 \
         --server-data-dir "/workspace/.vscode-server" \
         --default-folder "/workspace" &> /vscode.log &
-    echo "VS Code server started with token: mks123"
+    echo "VS Code server started (no token required)"
 }
 
 # ---------------------------------------------------------------------------- #
