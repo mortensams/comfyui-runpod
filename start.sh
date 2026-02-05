@@ -142,6 +142,14 @@ VSCODE_EOF
     echo "VS Code server started (no token required)"
 }
 
+# Start ai-toolkit Gradio UI for model training
+start_ai_toolkit_ui() {
+    echo "Starting ai-toolkit Gradio UI on port 7860..."
+    cd /workspace/ai-toolkit
+    nohup /workspace/ai-toolkit/venv/bin/python flux_train_ui.py &> /ai-toolkit-ui.log &
+    echo "ai-toolkit Gradio UI started"
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -191,6 +199,7 @@ nohup filebrowser -c "$FILEBROWSER_CONFIG" &> /filebrowser.log &
 
 start_jupyter
 start_vscode
+start_ai_toolkit_ui
 
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"

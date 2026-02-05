@@ -8,6 +8,7 @@ Run the latest ComfyUI. First start installs dependencies (takes a few minutes),
 - `8080`: FileBrowser Quantum (mks / mks123)
 - `8888`: JupyterLab (token via `JUPYTER_PASSWORD`, root at `/workspace`)
 - `8000`: VS Code Server (no authentication required - secured by RunPod)
+- `7860`: ai-toolkit Gradio UI (web interface for model training configuration)
 - `22`: SSH (set `PUBLIC_KEY` or check logs for generated root password)
 
 ## Pre-installed custom nodes

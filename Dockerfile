@@ -170,7 +170,7 @@ RUN echo '#!/bin/bash\nsource /workspace/ai-toolkit/venv/bin/activate\necho "AI 
     chmod +x /usr/local/bin/ai-toolkit
 
 # Expose ports
-EXPOSE 8188 22 8888 8080 8000
+EXPOSE 8188 22 8888 8080 8000 7860
 
 # Copy start script
 COPY start.sh /start.sh
