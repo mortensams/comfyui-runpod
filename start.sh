@@ -159,14 +159,6 @@ VSCODE_EOF
     echo "VS Code server started (no token required)"
 }
 
-# Start ai-toolkit Gradio UI for model training
-start_ai_toolkit_ui() {
-    echo "Starting ai-toolkit Gradio UI on port 7860..."
-    cd /workspace/ai-toolkit
-    nohup /workspace/ai-toolkit/venv/bin/python flux_train_ui.py &> /ai-toolkit-ui.log &
-    echo "ai-toolkit Gradio UI started"
-}
-
 # Start FileBrowser Quantum
 start_filebrowser() {
     # Initialize FileBrowser Quantum if not already done
@@ -224,7 +216,6 @@ echo "=========================================="
 start_vscode
 start_filebrowser
 start_jupyter
-start_ai_toolkit_ui
 
 echo "=========================================="
 echo "All support services started!"

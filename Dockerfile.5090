@@ -163,30 +163,16 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
-# Install ai-toolkit in separate venv (reuses system PyTorch to save 3-5GB)
-RUN git clone https://github.com/ostris/ai-toolkit.git /workspace/ai-toolkit && \
-    cd /workspace/ai-toolkit && \
-    python3.12 -m venv venv --system-site-packages && \
-    ./venv/bin/pip install --upgrade pip && \
-    grep -v "^torch" requirements.txt | grep -v "^#" > requirements-no-torch.txt && \
-    ./venv/bin/pip install --no-cache-dir -r requirements-no-torch.txt && \
-    rm requirements-no-torch.txt
-
-# Create activation helper script for ai-toolkit
-RUN echo '#!/bin/bash\nsource /workspace/ai-toolkit/venv/bin/activate\necho "AI Toolkit environment activated!"\necho "Run training with: python /workspace/ai-toolkit/run.py config.yaml"\nexec bash' > /usr/local/bin/ai-toolkit && \
-    chmod +x /usr/local/bin/ai-toolkit
-
 # Final cleanup to reduce image size
 RUN pip cache purge && \
     rm -rf /root/.cache/pip && \
     rm -rf /tmp/* && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    find /usr/local/lib/python3.12 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
-    find /workspace/ai-toolkit -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+    find /usr/local/lib/python3.12 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # Expose ports
-EXPOSE 8188 22 8888 8080 8000 7860
+EXPOSE 8188 22 8888 8080 8000
 
 # Copy start script
 COPY start.sh /start.sh
