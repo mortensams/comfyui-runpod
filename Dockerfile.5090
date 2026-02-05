@@ -72,6 +72,12 @@ RUN wget https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.23-
     python3.12 -m pip install --upgrade --force-reinstall llama_cpp_python-0.3.23+cu128.basic-cp312-cp312-linux_x86_64.whl && \
     rm llama_cpp_python-0.3.23+cu128.basic-cp312-cp312-linux_x86_64.whl
 
+# Clean up builder stage to reduce layer size
+RUN rm -rf /tmp/build && \
+    python3.12 -m pip cache purge && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # ============================================================================
 # Stage 2: Runtime - Clean image with pre-installed packages
 # ============================================================================
@@ -157,17 +163,27 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
-# Install ai-toolkit in separate venv
+# Install ai-toolkit in separate venv (reuses system PyTorch to save 3-5GB)
 RUN git clone https://github.com/ostris/ai-toolkit.git /workspace/ai-toolkit && \
     cd /workspace/ai-toolkit && \
     python3.12 -m venv venv --system-site-packages && \
     ./venv/bin/pip install --upgrade pip && \
-    ./venv/bin/pip install --no-cache-dir torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu126 && \
-    ./venv/bin/pip install --no-cache-dir -r requirements.txt
+    grep -v "^torch" requirements.txt | grep -v "^#" > requirements-no-torch.txt && \
+    ./venv/bin/pip install --no-cache-dir -r requirements-no-torch.txt && \
+    rm requirements-no-torch.txt
 
 # Create activation helper script for ai-toolkit
 RUN echo '#!/bin/bash\nsource /workspace/ai-toolkit/venv/bin/activate\necho "AI Toolkit environment activated!"\necho "Run training with: python /workspace/ai-toolkit/run.py config.yaml"\nexec bash' > /usr/local/bin/ai-toolkit && \
     chmod +x /usr/local/bin/ai-toolkit
+
+# Final cleanup to reduce image size
+RUN pip cache purge && \
+    rm -rf /root/.cache/pip && \
+    rm -rf /tmp/* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    find /usr/local/lib/python3.12 -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /workspace/ai-toolkit -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # Expose ports
 EXPOSE 8188 22 8888 8080 8000 7860
