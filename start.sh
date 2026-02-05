@@ -118,7 +118,18 @@ start_vscode() {
     fi
 
     # Create VS Code data directory in workspace for persistence
-    mkdir -p /workspace/.vscode-server
+    mkdir -p /workspace/.vscode-server/data/Machine
+
+    # Create default settings with dark theme and workspace trust disabled
+    cat > /workspace/.vscode-server/data/Machine/settings.json << 'VSCODE_EOF'
+{
+    "workbench.colorTheme": "Default Dark Modern",
+    "security.workspace.trust.enabled": false,
+    "security.workspace.trust.startupPrompt": "never",
+    "security.workspace.trust.emptyWindow": false,
+    "window.openFoldersInNewWindow": "off"
+}
+VSCODE_EOF
 
     echo "Starting VS Code server on port 8000..."
     nohup code serve-web \
@@ -126,7 +137,8 @@ start_vscode() {
         --accept-server-license-terms \
         --host "0.0.0.0" \
         --port 8000 \
-        --server-data-dir "/workspace/.vscode-server" &> /vscode.log &
+        --server-data-dir "/workspace/.vscode-server" \
+        --default-folder "/workspace" &> /vscode.log &
     echo "VS Code server started with token: mks123"
 }
 
