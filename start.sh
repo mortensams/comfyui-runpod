@@ -132,13 +132,13 @@ start_vscode() {
 VSCODE_EOF
 
     echo "Starting VS Code server on port 8000..."
+    cd /workspace
     nohup code serve-web \
         --without-connection-token \
         --accept-server-license-terms \
         --host "0.0.0.0" \
         --port 8000 \
-        --server-data-dir "/workspace/.vscode-server" \
-        --default-folder "/workspace" &> /vscode.log &
+        --server-data-dir "/workspace/.vscode-server" &> /vscode.log &
     echo "VS Code server started (no token required)"
 }
 
