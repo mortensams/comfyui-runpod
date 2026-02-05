@@ -7,7 +7,7 @@ variable "REGISTRY" {
 }
 
 group "default" {
-  targets = ["common", "dev"]
+  targets = ["common", "dev5090"]
 }
 
 # Common settings for all targets
@@ -16,35 +16,23 @@ target "common" {
   platforms = ["linux/amd64"]
 }
 
-# Regular ComfyUI image (CUDA 12.4)
-target "regular" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  tags = [
-    "${REGISTRY}:${TAG}",
-    "${REGISTRY}:latest",
-  ]
-}
-
-# Dev image for local testing
-target "dev" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  tags = ["${REGISTRY}:dev"]
-  output = ["type=docker"]
-}
-
-# Dev push targets (for CI pushing dev tags, without overriding latest)
-target "devpush" {
-  inherits = ["common"]
-  dockerfile = "Dockerfile"
-  tags = ["${REGISTRY}:dev"]
-}
-
-target "devpush5090" {
+# Dev image for local testing (RTX 5090)
+target "dev5090" {
   inherits = ["common"]
   dockerfile = "Dockerfile.5090"
   tags = ["${REGISTRY}:dev-5090"]
+  output = ["type=docker"]
+}
+
+# Dev push target for CI (RTX 5090)
+target "devpush5090" {
+  inherits = ["common"]
+  dockerfile = "Dockerfile.5090"
+  tags = [
+    "${REGISTRY}:dev-5090",
+    "${REGISTRY}:dev",
+    "${REGISTRY}:latest"
+  ]
 }
 
 # RTX 5090 optimized image (CUDA 12.8 + latest PyTorch build)
@@ -53,6 +41,8 @@ target "rtx5090" {
   dockerfile = "Dockerfile.5090"
   tags = [
     "${REGISTRY}:${TAG}-5090",
+    "${REGISTRY}:${TAG}",
     "${REGISTRY}:latest-5090",
+    "${REGISTRY}:latest",
   ]
 }

@@ -26,10 +26,18 @@ jobs:
 
       - name: Clear space to remove unused folders
         run: |
-          rm -rf /usr/share/dotnet
-          rm -rf /opt/ghc
-          rm -rf "/usr/local/share/boost"
-          rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "Before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache
+          sudo apt-get clean
+          docker system prune -af --volumes || true
+          echo "After cleanup:"
+          df -h
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -70,7 +78,7 @@ jobs:
           # Export TAG for docker-bake.hcl variable override
           echo "TAG=${RELEASE_VERSION}" >> $GITHUB_ENV
 
-      - name: Build and push 5090 image
+      - name: Build and push RTX 5090 image
         uses: docker/bake-action@v5
         env:
           TAG: ${{ env.RELEASE_VERSION }}
@@ -80,22 +88,6 @@ jobs:
           files: ./docker-bake.hcl
           targets: |
             rtx5090
-
-      - name: Clean up Docker build cache
-        run: |
-          docker builder prune -af --filter "until=1h"
-          docker system prune -af --volumes
-
-      - name: Build and push regular image
-        uses: docker/bake-action@v5
-        env:
-          TAG: ${{ env.RELEASE_VERSION }}
-          REGISTRY: ${{ env.REGISTRY }}
-        with:
-          push: true
-          files: ./docker-bake.hcl
-          targets: |
-            regular
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -112,10 +104,10 @@ jobs:
           echo "🚀 Release completed!"
           echo "Version: ${{ env.RELEASE_VERSION }}"
           echo "Docker Images:"
-          echo " - ${{ env.IMAGE_REF }}:${{ env.RELEASE_VERSION }} (regular)"
-          echo " - ${{ env.IMAGE_REF }}:latest (regular)"
           echo " - ${{ env.IMAGE_REF }}:${{ env.RELEASE_VERSION }}-5090 (RTX 5090)"
           echo " - ${{ env.IMAGE_REF }}:latest-5090 (RTX 5090)"
+          echo ""
+          echo "⚠️  This image requires RTX 5090 or newer (CUDA 12.8)"
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "Trigger: Manual workflow dispatch"
           else

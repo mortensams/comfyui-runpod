@@ -25,10 +25,18 @@ jobs:
 
       - name: Clear space to remove unused folders
         run: |
-          rm -rf /usr/share/dotnet
-          rm -rf /opt/ghc
-          rm -rf "/usr/local/share/boost"
-          rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "Before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache
+          sudo apt-get clean
+          docker system prune -af --volumes || true
+          echo "After cleanup:"
+          df -h
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -47,7 +55,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
 
-      - name: Build and push 5090 dev image
+      - name: Build and push RTX 5090 image (dev tag)
         uses: docker/bake-action@v5
         env:
           REGISTRY: ${{ env.IMAGE_NAME }}
@@ -56,18 +64,3 @@ jobs:
           files: ./docker-bake.hcl
           targets: |
             devpush5090
-
-      - name: Clean up Docker build cache
-        run: |
-          docker builder prune -af --filter "until=1h"
-          docker system prune -af --volumes
-
-      - name: Build and push regular dev image
-        uses: docker/bake-action@v5
-        env:
-          REGISTRY: ${{ env.IMAGE_NAME }}
-        with:
-          push: true
-          files: ./docker-bake.hcl
-          targets: |
-            devpush

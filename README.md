@@ -1,6 +1,10 @@
 [![Watch the video](https://i3.ytimg.com/vi/JovhfHhxqdM/hqdefault.jpg)](https://www.youtube.com/watch?v=JovhfHhxqdM)
 
-Run the latest ComfyUI. First start installs dependencies (takes a few minutes), then when you see this in the logs, ComfyUI is ready to be used: `[ComfyUI-Manager] All startup tasks have been completed.`
+# ComfyUI RunPod Template - RTX 5090 Optimized
+
+**⚠️ RTX 5090 Required**: This image is optimized for RTX 5090 GPUs with CUDA 12.8. It will not work on older GPUs.
+
+Run the latest ComfyUI with all modern tools. First start installs dependencies (takes a few minutes), then when you see this in the logs, ComfyUI is ready to be used: `[ComfyUI-Manager] All startup tasks have been completed.`
 
 ## Access
 
