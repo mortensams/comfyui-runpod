@@ -121,8 +121,10 @@ start_vscode() {
     mkdir -p /workspace/.vscode-server/data/Machine
     mkdir -p /workspace/.vscode-server/data/User/workspaceStorage
 
-    # Create default settings with dark theme and workspace trust disabled
-    cat > /workspace/.vscode-server/data/Machine/settings.json << 'VSCODE_EOF'
+    # Only create default settings if they don't exist (saves time on restart)
+    if [ ! -f "/workspace/.vscode-server/data/Machine/settings.json" ]; then
+        echo "Creating VS Code default settings..."
+        cat > /workspace/.vscode-server/data/Machine/settings.json << 'VSCODE_EOF'
 {
     "workbench.colorTheme": "Default Dark Modern",
     "security.workspace.trust.enabled": false,
@@ -132,9 +134,12 @@ start_vscode() {
     "workbench.startupEditor": "none"
 }
 VSCODE_EOF
+    fi
 
-    # Create a workspace configuration file to open /workspace by default
-    cat > /workspace/.vscode-server/workspace.code-workspace << 'VSCODE_EOF'
+    # Only create workspace config if it doesn't exist
+    if [ ! -f "/workspace/.vscode-server/workspace.code-workspace" ]; then
+        echo "Creating VS Code workspace configuration..."
+        cat > /workspace/.vscode-server/workspace.code-workspace << 'VSCODE_EOF'
 {
     "folders": [
         {
@@ -147,6 +152,7 @@ VSCODE_EOF
     }
 }
 VSCODE_EOF
+    fi
 
     echo "Starting VS Code server on port 8000..."
     cd /workspace
