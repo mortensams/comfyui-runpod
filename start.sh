@@ -119,6 +119,7 @@ start_vscode() {
 
     # Create VS Code data directory in workspace for persistence
     mkdir -p /workspace/.vscode-server/data/Machine
+    mkdir -p /workspace/.vscode-server/data/User/workspaceStorage
 
     # Create default settings with dark theme and workspace trust disabled
     cat > /workspace/.vscode-server/data/Machine/settings.json << 'VSCODE_EOF'
@@ -127,7 +128,23 @@ start_vscode() {
     "security.workspace.trust.enabled": false,
     "security.workspace.trust.startupPrompt": "never",
     "security.workspace.trust.emptyWindow": false,
-    "window.openFoldersInNewWindow": "off"
+    "window.openFoldersInNewWindow": "off",
+    "workbench.startupEditor": "none"
+}
+VSCODE_EOF
+
+    # Create a workspace configuration file to open /workspace by default
+    cat > /workspace/.vscode-server/workspace.code-workspace << 'VSCODE_EOF'
+{
+    "folders": [
+        {
+            "path": "/workspace"
+        }
+    ],
+    "settings": {
+        "workbench.colorTheme": "Default Dark Modern",
+        "security.workspace.trust.enabled": false
+    }
 }
 VSCODE_EOF
 
