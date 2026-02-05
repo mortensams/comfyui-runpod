@@ -3,7 +3,7 @@ set -e  # Exit the script if any statement returns a non-true return value
 
 COMFYUI_DIR="/workspace/runpod-slim/ComfyUI"
 VENV_DIR="$COMFYUI_DIR/.venv"
-FILEBROWSER_CONFIG="/root/.config/filebrowser/config.json"
+FILEBROWSER_CONFIG="/workspace/runpod-slim/filebrowser_config.yaml"
 DB_FILE="/workspace/runpod-slim/filebrowser.db"
 
 # ---------------------------------------------------------------------------- #
@@ -106,6 +106,30 @@ start_jupyter() {
     echo "Jupyter Lab started"
 }
 
+# Start VS Code server for browser-based code editing
+start_vscode() {
+    # Setup GitHub authentication if token is provided
+    if [[ -n "$GITHUB_TOKEN" ]]; then
+        echo "Configuring GitHub authentication..."
+        echo "$GITHUB_TOKEN" > /tmp/_ghtoken.txt
+        gh auth login --with-token < /tmp/_ghtoken.txt 2>/dev/null || true
+        rm -f /tmp/_ghtoken.txt
+        gh auth setup-git 2>/dev/null || true
+    fi
+
+    # Create VS Code data directory in workspace for persistence
+    mkdir -p /workspace/.vscode-server
+
+    echo "Starting VS Code server on port 8000..."
+    nohup code serve-web \
+        --connection-token "mks123" \
+        --accept-server-license-terms \
+        --host "0.0.0.0" \
+        --port 8000 \
+        --server-data-dir "/workspace/.vscode-server" &> /vscode.log &
+    echo "VS Code server started with token: mks123"
+}
+
 # ---------------------------------------------------------------------------- #
 #                               Main Program                                     #
 # ---------------------------------------------------------------------------- #
@@ -114,24 +138,47 @@ start_jupyter() {
 setup_ssh
 export_env_vars
 
-# Initialize FileBrowser if not already done
-if [ ! -f "$DB_FILE" ]; then
-    echo "Initializing FileBrowser..."
-    filebrowser config init
-    filebrowser config set --address 0.0.0.0
-    filebrowser config set --port 8080
-    filebrowser config set --root /workspace
-    filebrowser config set --auth.method=json
-    filebrowser users add admin adminadmin12 --perm.admin
+# Initialize FileBrowser Quantum if not already done
+if [ ! -f "$FILEBROWSER_CONFIG" ]; then
+    echo "Initializing FileBrowser Quantum..."
+    cat > "$FILEBROWSER_CONFIG" << 'EOF'
+server:
+  port: 8080
+  baseURL: "/"
+  database: "/workspace/runpod-slim/filebrowser.db"
+  cacheDir: "/workspace/runpod-slim/cache"
+  sources:
+    - path: "/workspace"
+      name: "Workspace"
+      config:
+        defaultEnabled: true
+
+auth:
+  tokenExpirationHours: 168
+  adminUsername: "mks"
+  adminPassword: "mks123"
+  methods:
+    password:
+      enabled: true
+      minLength: 5
+      signup: false
+
+frontend:
+  name: "RunPod File Browser"
+  disableDefaultLinks: true
+EOF
+    echo "FileBrowser Quantum configuration created"
 else
-    echo "Using existing FileBrowser configuration..."
+    echo "Using existing FileBrowser Quantum configuration..."
 fi
 
-# Start FileBrowser
-echo "Starting FileBrowser on port 8080..."
-nohup filebrowser &> /filebrowser.log &
+# Start FileBrowser Quantum
+echo "Starting FileBrowser Quantum on port 8080..."
+cd /workspace/runpod-slim
+nohup filebrowser -c "$FILEBROWSER_CONFIG" &> /filebrowser.log &
 
 start_jupyter
+start_vscode
 
 # Create default comfyui_args.txt if it doesn't exist
 ARGS_FILE="/workspace/runpod-slim/comfyui_args.txt"

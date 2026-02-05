@@ -2,6 +2,10 @@ variable "TAG" {
   default = "slim"
 }
 
+variable "REGISTRY" {
+  default = "ghcr.io/mortensams/comfyui-runpod"
+}
+
 group "default" {
   targets = ["common", "dev"]
 }
@@ -17,8 +21,8 @@ target "regular" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
   tags = [
-    "runpod/comfyui:${TAG}",
-    "runpod/comfyui:latest",
+    "${REGISTRY}:${TAG}",
+    "${REGISTRY}:latest",
   ]
 }
 
@@ -26,7 +30,7 @@ target "regular" {
 target "dev" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  tags = ["runpod/comfyui:dev"]
+  tags = ["${REGISTRY}:dev"]
   output = ["type=docker"]
 }
 
@@ -34,13 +38,13 @@ target "dev" {
 target "devpush" {
   inherits = ["common"]
   dockerfile = "Dockerfile"
-  tags = ["runpod/comfyui:dev"]
+  tags = ["${REGISTRY}:dev"]
 }
 
 target "devpush5090" {
   inherits = ["common"]
   dockerfile = "Dockerfile.5090"
-  tags = ["runpod/comfyui:dev-5090"]
+  tags = ["${REGISTRY}:dev-5090"]
 }
 
 # RTX 5090 optimized image (CUDA 12.8 + latest PyTorch build)
@@ -48,7 +52,7 @@ target "rtx5090" {
   inherits = ["common"]
   dockerfile = "Dockerfile.5090"
   tags = [
-    "runpod/comfyui:${TAG}-5090",
-    "runpod/comfyui:latest-5090",
+    "${REGISTRY}:${TAG}-5090",
+    "${REGISTRY}:latest-5090",
   ]
 }

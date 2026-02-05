@@ -66,6 +66,12 @@ RUN for node_dir in */; do \
         fi; \
     done
 
+# Install llama-cpp-python with CUDA support
+WORKDIR /tmp/build
+RUN wget https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.23-cu128-Basic-linux-20260129/llama_cpp_python-0.3.23+cu128.basic-cp312-cp312-linux_x86_64.whl && \
+    python3.12 -m pip install --upgrade --force-reinstall llama_cpp_python-0.3.23+cu128.basic-cp312-cp312-linux_x86_64.whl && \
+    rm llama_cpp_python-0.3.23+cu128.basic-cp312-cp312-linux_x86_64.whl
+
 # ============================================================================
 # Stage 2: Runtime - Clean image with pre-installed packages
 # ============================================================================
@@ -74,7 +80,6 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
-ENV FILEBROWSER_CONFIG=/workspace/runpod-slim/.filebrowser.json
 
 # Update and install runtime dependencies, CUDA, and common tools
 RUN apt-get update && \
@@ -125,8 +130,15 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 RUN pip uninstall -y uv 2>/dev/null || true && \
     rm -f /usr/local/bin/uv /usr/local/bin/uvx
 
-# Install FileBrowser
-RUN curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
+# Install FileBrowser Quantum
+RUN wget -O /usr/local/bin/filebrowser https://github.com/gtsteffaniak/filebrowser/releases/download/v1.1.1-stable/linux-amd64-filebrowser && \
+    chmod +x /usr/local/bin/filebrowser
+
+# Install VS Code CLI for code-server
+RUN curl -fsSL https://code.visualstudio.com/sha/download?build=stable\&os=cli-alpine-x64 -o vscode_cli.tar.gz && \
+    tar -xzf vscode_cli.tar.gz -C /usr/local/bin && \
+    rm vscode_cli.tar.gz && \
+    chmod +x /usr/local/bin/code
 
 # Set CUDA environment variables
 ENV PATH=/usr/local/cuda/bin:${PATH}
@@ -146,7 +158,7 @@ RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
 # Expose ports
-EXPOSE 8188 22 8888 8080
+EXPOSE 8188 22 8888 8080 8000
 
 # Copy start script
 COPY start.sh /start.sh
