@@ -157,6 +157,18 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 RUN mkdir -p /workspace/runpod-slim
 WORKDIR /workspace/runpod-slim
 
+# Install ai-toolkit in separate venv
+RUN git clone https://github.com/ostris/ai-toolkit.git /workspace/ai-toolkit && \
+    cd /workspace/ai-toolkit && \
+    python3.12 -m venv venv --system-site-packages && \
+    ./venv/bin/pip install --upgrade pip && \
+    ./venv/bin/pip install --no-cache-dir torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu126 && \
+    ./venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Create activation helper script for ai-toolkit
+RUN echo '#!/bin/bash\nsource /workspace/ai-toolkit/venv/bin/activate\necho "AI Toolkit environment activated!"\necho "Run training with: python /workspace/ai-toolkit/run.py config.yaml"\nexec bash' > /usr/local/bin/ai-toolkit && \
+    chmod +x /usr/local/bin/ai-toolkit
+
 # Expose ports
 EXPOSE 8188 22 8888 8080 8000
 
